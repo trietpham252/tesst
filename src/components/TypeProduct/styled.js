@@ -4,8 +4,8 @@ export const WrapperType = styled.div`
   padding: 10px 10px;
   cursor: pointer;
   &:hover {
-    background-color: var(--primary-color);
-    color: #fff;
+    background-color: #add8e6; /* Màu xanh da trời nhạt */
+    color: #fff; /* Màu trắng */
     border-radius: 4px;
   }
-`
+`;

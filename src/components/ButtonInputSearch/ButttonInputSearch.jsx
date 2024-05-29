@@ -14,10 +14,11 @@ const ButttonInputSearch = (props) => {
   return (
     <div style={{ display: 'flex', }}>
       <InputComponent
+        className="input-search"
         size={size}
         placeholder={placeholder}
         bordered={bordered}
-        style={{ backgroundColor: backgroundColorInput }}
+        style={{ backgroundColor: backgroundColorInput}}
         {...props}
       />
       <ButtonComponent

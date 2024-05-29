@@ -1,84 +1,91 @@
-import { Col, Image, Rate, Row } from 'antd'
-import React from 'react'
-import imageProductSmall from '../../assets/images/small.png'
-import { WrapperStyleImageSmall, WrapperStyleColImage, WrapperStyleNameProduct, WrapperStyleTextSell, WrapperPriceProduct, WrapperPriceTextProduct, WrapperAddressProduct, WrapperQualityProduct, WrapperInputNumber } from './style'
-import { PlusOutlined, MinusOutlined } from '@ant-design/icons'
-import ButtonComponent from '../ButtonComponent/ButtonComponent'
-import * as ProductService from '../../services/ProductService'
-import { useQuery } from '@tanstack/react-query'
-import Loading from '../LoadingComponent/Loading'
-import { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { addOrderProduct,resetOrder } from '../../redux/slides/orderSlide'
-import { convertPrice, initFacebookSDK } from '../../utils'
-import { useEffect } from 'react'
-import * as message from '../Message/Message'
-import LikeButtonComponent from '../LikeButtonComponent/LikeButtonComponent'
-import CommentComponent from '../CommentComponent/CommentComponent'
+import { Col, Image, Rate, Row, Space, Button, InputNumber, Typography } from 'antd';
+import React from 'react';
+import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import styled from 'styled-components';
+import * as ProductService from '../../services/ProductService';
+import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { addOrderProduct, resetOrder } from '../../redux/slides/orderSlide';
+import { convertPrice, initFacebookSDK } from '../../utils';
+import * as message from '../Message/Message';
+import LikeButtonComponent from '../LikeButtonComponent/LikeButtonComponent';
+import CommentComponent from '../CommentComponent/CommentComponent';
+import Loading from '../LoadingComponent/Loading';
+const { Title, Text } = Typography;
 
-const ProductDetailsComponent = ({idProduct}) => {
-    const [numProduct, setNumProduct] = useState(1)
-    const user = useSelector((state) => state.user)
-    const order = useSelector((state) => state.order)
-    const [errorLimitOrder,setErrorLimitOrder] = useState(false)
-    const navigate = useNavigate()
-    const location = useLocation()
-    const dispatch = useDispatch()
+const Wrapper = styled.div`
+    padding: 16px;
+    background: #fff;
+    border-radius: 4px;
+    max-width: 1200px;
+    margin: auto;
+`;
 
-    const onChange = (value) => { 
-        setNumProduct(Number(value))
-    }
+const ProductDetailsComponent = ({ idProduct }) => {
+    const [numProduct, setNumProduct] = useState(1);
+    const user = useSelector(state => state.user);
+    const order = useSelector(state => state.order);
+    const [errorLimitOrder, setErrorLimitOrder] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const dispatch = useDispatch();
 
-    const fetchGetDetailsProduct = async (context) => {
-        const id = context?.queryKey && context?.queryKey[1]
-        if(id) {
-            const res = await ProductService.getDetailsProduct(id)
-            return res.data
+    const onChange = value => {
+        setNumProduct(Number(value));
+    };
+
+    const fetchGetDetailsProduct = async context => {
+        const id = context?.queryKey && context?.queryKey[1];
+        if (id) {
+            const res = await ProductService.getDetailsProduct(id);
+            return res.data;
         }
-    }
+    };
 
     useEffect(() => {
-        initFacebookSDK()
-    }, [])
+        initFacebookSDK();
+    }, []);
 
     useEffect(() => {
-        const orderRedux = order?.orderItems?.find((item) => item.product === productDetails?._id) 
-        if((orderRedux?.amount + numProduct) <= orderRedux?.countInstock || (!orderRedux && productDetails?.countInStock > 0)) {
-            setErrorLimitOrder(false)
-        } else if(productDetails?.countInStock === 0){
-            setErrorLimitOrder(true)
+        const orderRedux = order?.orderItems?.find(item => item.product === productDetails?._id);
+        if ((orderRedux?.amount + numProduct) <= orderRedux?.countInstock || (!orderRedux && productDetails?.countInStock > 0)) {
+            setErrorLimitOrder(false);
+        } else if (productDetails?.countInStock === 0) {
+            setErrorLimitOrder(true);
         }
-    },[numProduct])
+    }, [numProduct]);
 
     useEffect(() => {
-        if(order.isSucessOrder) {
-            message.success('Đã thêm vào giỏ hàng')
+        if (order.isSucessOrder) {
+            message.success('Đã thêm vào giỏ hàng');
         }
         return () => {
-            dispatch(resetOrder())
-        }
-    }, [order.isSucessOrder])
+            dispatch(resetOrder());
+        };
+    }, [order.isSucessOrder]);
 
     const handleChangeCount = (type, limited) => {
-        if(type === 'increase') {
-            if(!limited) {
-                setNumProduct(numProduct + 1)
+        if (type === 'increase') {
+            if (!limited) {
+                setNumProduct(numProduct + 1);
             }
-        }else {
-            if(!limited) {
-                setNumProduct(numProduct - 1)
+        } else {
+            if (!limited) {
+                setNumProduct(numProduct - 1);
             }
         }
-    }
+    };
 
-    const { isLoading, data: productDetails } = useQuery(['product-details', idProduct], fetchGetDetailsProduct, { enabled : !!idProduct})
+    const { isLoading, data: productDetails } = useQuery(['product-details', idProduct], fetchGetDetailsProduct, { enabled: !!idProduct });
+
     const handleAddOrderProduct = () => {
-        if(!user?.id) {
-            navigate('/sign-in', {state: location?.pathname})
-        }else {
-            const orderRedux = order?.orderItems?.find((item) => item.product === productDetails?._id)
-            if((orderRedux?.amount + numProduct) <= orderRedux?.countInstock || (!orderRedux && productDetails?.countInStock > 0)) {
+        if (!user?.id) {
+            navigate('/sign-in', { state: location?.pathname });
+        } else {
+            const orderRedux = order?.orderItems?.find(item => item.product === productDetails?._id);
+            if ((orderRedux?.amount + numProduct) <= orderRedux?.countInstock || (!orderRedux && productDetails?.countInStock > 0)) {
                 dispatch(addOrderProduct({
                     orderItem: {
                         name: productDetails?.name,
@@ -89,112 +96,65 @@ const ProductDetailsComponent = ({idProduct}) => {
                         discount: productDetails?.discount,
                         countInstock: productDetails?.countInStock
                     }
-                }))
+                }));
             } else {
-                setErrorLimitOrder(true)
+                setErrorLimitOrder(true);
             }
         }
-    }
+    };
 
     return (
         <Loading isLoading={isLoading}>
-            <Row style={{ padding: '16px', background: '#fff', borderRadius: '4px', height:'100%' }}>
-                <Col span={10} style={{ borderRight: '1px solid #e5e5e5', paddingRight: '8px' }}>
-                    <Image src={productDetails?.image} alt="image prodcut" preview={true} />
-                    <Row style={{ paddingTop: '10px', justifyContent: 'space-between' }}>
-                        <WrapperStyleColImage span={4} sty>
-                            <WrapperStyleImageSmall src={imageProductSmall} alt="image small" preview={true} />
-                        </WrapperStyleColImage>
-                        <WrapperStyleColImage span={4}>
-                            <WrapperStyleImageSmall src={imageProductSmall} alt="image small" preview={true} />
-                        </WrapperStyleColImage>
-
-                        <WrapperStyleColImage span={4}>
-                            <WrapperStyleImageSmall src={imageProductSmall} alt="image small" preview={true} />
-                        </WrapperStyleColImage>
-
-                        <WrapperStyleColImage span={4}>
-                            <WrapperStyleImageSmall src={imageProductSmall} alt="image small" preview={true} />
-                        </WrapperStyleColImage>
-
-                        <WrapperStyleColImage span={4}>
-                            <WrapperStyleImageSmall src={imageProductSmall} alt="image small" preview={true} />
-                        </WrapperStyleColImage>
-
-                        <WrapperStyleColImage span={4}>
-                            <WrapperStyleImageSmall src={imageProductSmall} alt="image small" preview={true} />
-                        </WrapperStyleColImage>
-
-                    </Row>
-                </Col>
-                <Col span={14} style={{ paddingLeft: '10px' }}>
-                    <WrapperStyleNameProduct>{productDetails?.name}</WrapperStyleNameProduct>
-                    <div>
-                        <Rate allowHalf defaultValue={productDetails?.rating} value={productDetails?.rating} />
-                        <WrapperStyleTextSell> | Đả bán 1000+ </WrapperStyleTextSell>
-                    </div>
-                    <WrapperPriceProduct>
-                        <WrapperPriceTextProduct>{convertPrice(productDetails?.price)}</WrapperPriceTextProduct>
-                    </WrapperPriceProduct>
-                    <WrapperAddressProduct>
-                        <span>Giao đến </span>
-                        <span className='address'>{user?.address}</span> -
-                        <span className='change-address'> Đổi địa chỉ</span>
-                    </WrapperAddressProduct>
-                    <LikeButtonComponent
-                     dataHref={ process.env.REACT_APP_IS_LOCAL 
-                                ? "https://developers.facebook.com/docs/plugins/" 
-                                : window.location.href
-                            } 
-                    />
-                    <div style={{ margin: '10px 0 20px', padding: '10px 0', borderTop: '1px solid #e5e5e5', borderBottom: '1px solid #e5e5e5' }}>
-                        <div style={{ marginBottom: '10px' }}>Số lượng</div>
-                        <WrapperQualityProduct>
-                            <button style={{ border: 'none', background: 'transparent', cursor: 'pointer' }} onClick={() => handleChangeCount('decrease',numProduct === 1)}>
-                                <MinusOutlined style={{ color: '#000', fontSize: '20px' }} />
-                            </button>
-                            <WrapperInputNumber onChange={onChange} defaultValue={1} max={productDetails?.countInStock} min={1} value={numProduct} size="small" />
-                            <button style={{ border: 'none', background: 'transparent', cursor: 'pointer' }} onClick={() => handleChangeCount('increase',  numProduct === productDetails?.countInStock)}>
-                                <PlusOutlined style={{ color: '#000', fontSize: '20px' }} />
-                            </button>
-                        </WrapperQualityProduct>
-                    </div>
-                    <div style={{ display: 'flex', aliggItems: 'center', gap: '12px' }}>
+            <Wrapper>
+                <Row gutter={[16, 16]}>
+                    <Col xs={24} md={10}>
+                        <Image src={productDetails?.image} alt="image product" preview={true} />
+                        <Row style={{ paddingTop: '10px' }} gutter={[8, 8]}>
+                            {[...Array(6)].map((_, index) => (
+                                <Col key={index} xs={8} md={4}>
+                                    <Image src={productDetails?.image} alt="image small" preview={true} />
+                                </Col>
+                            ))}
+                        </Row>
+                    </Col>
+                    <Col xs={24} md={14}>
+                        <Title level={2}>{productDetails?.name}</Title>
+                        <Space size="middle">
+                            <Rate allowHalf defaultValue={productDetails?.rating} value={productDetails?.rating} />
+                            <Text type="secondary">Đã bán 1000+</Text>
+                        </Space>
                         <div>
-                            <ButtonComponent
-                                size={40}
-                                styleButton={{
-                                    background: 'rgb(26, 17, 10)',
-                                    height: '48px',
-                                    width: '220px',
-                                    border: 'none',
-                                    borderRadius: '4px'
-                                }}
-                                onClick={handleAddOrderProduct}
-                                textbutton={'Chọn mua'}
-                                styleTextButton={{ color: '#fff', fontSize: '15px', fontWeight: '700' }}
-                            ></ButtonComponent>
-                            {errorLimitOrder && <div style={{color: 'red'}}>Sản phẩm hết hàng </div>}
+                            <Text type="danger" strong style={{ fontSize: '24px' }}>{convertPrice(productDetails?.price)}</Text>
                         </div>
-                        <ButtonComponent
-                            size={40}
-                            styleButton={{
-                                background: '#fff',
-                                height: '48px',
-                                width: '220px',
-                                border: '1px solid rgb(13, 92, 182)',
-                                borderRadius: '4px'
-                            }}
-                            textbutton={'Mua trả sau'}
-                            styleTextButton={{ color: 'rgb(13, 92, 182)', fontSize: '15px' }}
-                        ></ButtonComponent>
-                    </div>
-                </Col>
+                        <div>
+                            <Text>Giao đến {user?.address} - </Text>
+                            <Text type="link">Đổi địa chỉ</Text>
+                        </div>
+                        <LikeButtonComponent
+                            dataHref={process.env.REACT_APP_IS_LOCAL
+                                ? "https://developers.facebook.com/docs/plugins/"
+                                : window.location.href
+                            }
+                        />
+                        <div style={{ margin: '20px 0' }}>
+                            <Text>Số lượng</Text>
+                            <Space>
+                                <Button icon={<MinusOutlined />} onClick={() => handleChangeCount('decrease', numProduct === 1)} />
+                                <InputNumber min={1} max={productDetails?.countInStock} value={numProduct} onChange={onChange} />
+                                <Button icon={<PlusOutlined />} onClick={() => handleChangeCount('increase', numProduct === productDetails?.countInStock)} />
+                            </Space>
+                        </div>
+                        <Space>
+                            <Button type="primary" size="large" onClick={handleAddOrderProduct}>Chọn mua</Button>
+                            <Button size="large">Mua trả sau</Button>
+                        </Space>
+                        {errorLimitOrder && <Text type="danger">Sản phẩm hết hàng</Text>}
+                    </Col>
+                </Row>
                 <CommentComponent />
-            </Row >
-            
+            </Wrapper>
         </Loading>
-    )
-}
+    );
+};
 
-export default ProductDetailsComponent
+export default ProductDetailsComponent;
